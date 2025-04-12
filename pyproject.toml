@@ -8,6 +8,7 @@ version         = "0.1.0"
 dependencies = [
     "pandas>=2.2.3",
     "pathlib>=1.0.1",
+    "pathvalidate>=3.2.3",
     "pyhwpx==0.50.32",
     "pyjosa>=1.0.3",
 ]
