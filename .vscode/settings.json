@@ -1,0 +1,4 @@
+{
+    // "ruff.lineLength": 100,
+    "ruff.configuration": "pyproject.toml"
+}
