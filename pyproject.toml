@@ -1,5 +1,5 @@
 [project]
-description     = "Add your description here"
+description     = "A project for automating HWP document manipulation"
 name            = "autohwp"
 readme          = "README.md"
 requires-python = ">=3.12"
