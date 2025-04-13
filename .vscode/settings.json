@@ -1,6 +1,8 @@
 {
     "git.enableCommitSigning": true,
     "python.terminal.activateEnvironment": true,
+    "python.envFile": "${workspaceFolder}/.env",
+    "jupyter.notebookFileRoot": "${workspaceFolder}/src",
     // "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
 
     "ruff.configuration": "{workspaceFolder}/pyproject.toml",

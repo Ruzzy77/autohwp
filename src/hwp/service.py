@@ -1,18 +1,14 @@
 import winreg
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict
+from typing import Dict
 
 from pandas import DataFrame
 from pyhwpx import Hwp
 
-from src.excel.formatter import format_cell
-from src.excel.loader import load_worksheet
-from src.excel.preprocess import preprocess_dataframe
-from src.hwp.export import save_document
-from src.hwp.field_mapper import FIELD_MAPPING
-from src.hwp.template import open_template
-from src.hwp.writer import write_fields
+from hwp.export import save_document
+from hwp.template import open_template
+from hwp.writer import write_fields
 
 
 @contextmanager
@@ -29,7 +25,7 @@ def hwp_context(visible: bool = False):
     hwp = Hwp(new=True, visible=visible, register_module=False)
     print("Hwp version:", hwp.Version)
 
-    register_security_module(hwp, "resource/FilePathCheckerModule.dll")
+    register_security_module(hwp, "../resource/FilePathCheckerModule.dll")
 
     try:
         yield hwp
@@ -65,15 +61,15 @@ def register_security_module(
     if not dll_path.exists():
         raise FileNotFoundError(f"DLL 파일이 존재하지 않습니다: {dll_path}")
 
-    module_name = dll_path.stem  # 'FilePathCheckerModuleExample'
+    module_name = dll_path.stem  # 'FilePathCheckerModule'
     reg_path = r"Software\HNC\HwpAutomation\Modules"
 
-    # 1-1. 레지스트리 문자열 값(FilePathCheckerModuleExample) 존재 확인
+    # 1-1. 레지스트리 문자열 값(FilePathCheckerModule) 존재 확인
     try:
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, reg_path) as key:
             try:
-                value, _ = winreg.QueryValueEx(key, module_name)
-                print(f"[✔] 레지스트리에 보안모듈 등록됨: {module_name} → {value}")
+                _, _ = winreg.QueryValueEx(key, module_name)
+                # print("[✔] 레지스트리에 보안모듈 등록됨")
             except FileNotFoundError:
                 print("[✖] 레지스트리에 보안모듈이 등록되어 있지 않습니다. 새로 등록합니다.")
 
@@ -110,50 +106,40 @@ def register_security_module(
 
 def process_documents(
     template_path: str,
-    excel_path: str,
+    dataframe: DataFrame,
     output_folder: str,
-    config: Dict[str, Any],
+    workflow_name: str,
+    key_columns: list[str],
+    field_mapping: Dict[str, str],
 ) -> None:
     """
     HWP 양식문서 작성(채워넣기) 및 저장
 
     Args:
         template_path (str): 템플릿 파일 경로
-        excel_path (str): 엑셀 파일 경로
+        dataframe (DataFrame): 데이터프레임 객체
         output_folder (str): 출력 폴더 이름
-        config (Dict[str, str]): 설정 값 딕셔너리
+        workflow_name (str): 워크플로우 이름
+        key_columns: list[str]: 기본 열 이름들
+            - 문서 저장 시 파일 이름에 사용
+            - 중복 방지 및 구분을 위해 사용됨
+            - 예: ['이름', '생년월일']
+        field_mapping (Dict[str, str]): 필드 매핑 정보
 
     Returns:
         None
     """
+
     with hwp_context(visible=False) as hwp:
         # 템플릿 열기
-        open_template(hwp, template_path)
-
-        # 엑셀 데이터 로드 및 처리
-        ws = load_worksheet(excel_path, config)
-        header = [
-            cell.value
-            for cell in next(
-                ws.iter_rows(min_row=config["column_row"], max_row=config["column_row"])
-            )
-        ]
-        primary_column_index = header.index(config["primary_column"])
-
-        fill_data = []
-        for row in ws.iter_rows(min_row=config["start_row"]):
-            if row[primary_column_index].value is not None:
-                fill_data.append([format_cell(cell) for cell in row])
-
-        df = DataFrame(fill_data, columns=header)
-        df = preprocess_dataframe(df, config)
+        _ = open_template(hwp, template_path)
 
         # 문서 생성 및 저장
-        for index, row in df.iterrows():
-            idx = int(str(index)) + 1
-            print(f"문서 만드는중... ({idx}/{len(df)})")
+        for index, row in dataframe.iterrows():
+            print(f"문서 만드는중... ({int(str(index)) + 1}/{len(dataframe)})")
 
-            write_fields(hwp, row, FIELD_MAPPING)
+            write_fields(hwp, row, field_mapping)
 
-            save_filename = f"{config['workflow_name']}_{row[config['primary_column']]}"
+            name_combined = "_".join(str(row[col]) for col in key_columns)
+            save_filename = f"{workflow_name}_{name_combined}"
             save_document(hwp, output_folder, save_filename)

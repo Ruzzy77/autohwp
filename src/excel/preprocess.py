@@ -17,9 +17,7 @@ def preprocess_dataframe(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     df["성명(본문)"] = df["성명"].apply(lambda x: Josa.get_full_string(x, "을"))
     df["책임교수명(본문)"] = df["책임교수명"].apply(lambda x: Josa.get_full_string(x, "을"))
     df["총 사업기간"] = df["총 사업기간 시작"] + " ~ " + df["총 사업기간 종료"]
-    df["당해연도 사업기간"] = (
-        df["당해연도 사업기간 시작"] + " ~ " + df["당해연도 사업기간 종료"]
-    )
+    df["당해연도 사업기간"] = df["당해연도 사업기간 시작"] + " ~ " + df["당해연도 사업기간 종료"]
     df["총 계약금액"] = df["총 계약금액"].astype(int).apply(lambda x: f"{x:,}")
     df["월 계약금액"] = df["월 계약금액"].astype(int).apply(lambda x: f"{x:,}")
 

@@ -12,8 +12,9 @@ def open_template(hwp: Hwp, path: str) -> list[str]:
     Returns:
         list[str]: 필드 이름 목록
     """
+
     hwp.open(path)
-    print("Opened document title:", hwp.get_title())
+    # print("Opened document title:", hwp.get_title())
 
     fields_hwp = hwp.get_field_list()
     # fields_hwp = "title{{0}}\x02body{{0}}\x02title{{1}}\x02body{{1}}\x02footer{{0}}"
@@ -24,7 +25,6 @@ def open_template(hwp: Hwp, path: str) -> list[str]:
 
     # 필드 이름을 추출하여 리스트로 변환
     fields = [field.strip() for field in fields_hwp.split("\x02") if field.strip()]
-
-    print("Total number of fields:", len(fields))
+    # print("Total number of fields:", len(fields))
 
     return fields

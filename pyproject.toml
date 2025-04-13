@@ -17,6 +17,9 @@ dependencies = [
 dev = [ "notebook>=7.4.0", "ruff>=0.11.5" ]
 ui  = [ "nicegui>=2.14.1" ]
 
+[tool.uv.sources]
+autohwp = { workspace = true }
+
 [tool.ruff]
 ignore      = [ "F401" ] # 사용하지 않은 import 제거 방지
 line-length = 100

@@ -3,7 +3,7 @@ from datetime import datetime
 from openpyxl.cell import Cell, MergedCell
 from openpyxl.styles import is_date_format
 
-from src.excel.config import EXCEL_TO_STRFTIME
+from excel.config import EXCEL_TO_STRFTIME
 
 
 def format_cell(cell: "Cell | MergedCell") -> str | None:
