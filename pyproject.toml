@@ -6,16 +6,18 @@ requires-python = ">=3.12"
 version         = "0.1.0"
 
 dependencies = [
+    "openpyxl>=3.1.5",
     "pandas>=2.2.3",
     "pathlib>=1.0.1",
     "pathvalidate>=3.2.3",
-    "pyhwpx==0.50.32",
+    "pydantic>=2.11.3",
     "pyjosa>=1.0.3",
 ]
 
 [dependency-groups]
 dev = [ "notebook>=7.4.0", "ruff>=0.11.5" ]
-ui  = [ "nicegui>=2.14.1" ]
+hwp = [ "pyhwpx==0.50.32" ]
+ui  = [ "streamlit>=1.44.1" ]
 
 [tool.uv.sources]
 autohwp = { workspace = true }

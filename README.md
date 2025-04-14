@@ -65,12 +65,11 @@
 
 ### GUI
 
-- nicegui `latest`
-  > 웹 기반 GUI 및 백엔드 서버를 제공합니다.
+- streamlit `latest`
 
 <br/><br/>
 
 ## TODO
 
-- [ ] 웹 기반 (NiceGUI) 구현
+- [ ] 웹 앱 (Streamlit) 구현
 - [ ] 개인 배포용 pyinstaller로 exe 파일 만들기
