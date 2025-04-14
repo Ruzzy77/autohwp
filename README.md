@@ -40,6 +40,30 @@
 
 <br/><br/>
 
+## 로컬에서 실행하기 (Web GUI)
+
+### 1. 패키지 설치하기
+
+[uv python 가상환경 관리도구](https://github.com/astral-sh/uv?tab=readme-ov-file#installation)를 사용하여 패키지를 설치합니다.
+
+```bash
+uv sync --all-groups
+```
+
+### 2. 웹 GUI 실행하기
+
+```bash
+cd src
+```
+
+```bash
+streamlit run entrypoint_gui.py
+```
+
+> 웹 브라우저에서 `http://localhost:8501`로 접속합니다.
+
+<br/><br/>
+
 ## Python Requirements
 
 > `pyproject.toml` 또는 `requirements.txt` 파일을 통해 패키지를 설치할 수 있습니다.
@@ -71,5 +95,5 @@
 
 ## TODO
 
-- [ ] 웹 앱 (Streamlit) 구현
+- [x] 웹 앱 (Streamlit) 구현
 - [ ] 개인 배포용 pyinstaller로 exe 파일 만들기
