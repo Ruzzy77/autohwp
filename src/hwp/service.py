@@ -1,7 +1,7 @@
 import winreg
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 from pandas import DataFrame
 from pyhwpx import Hwp
@@ -109,8 +109,9 @@ def process_documents(
     dataframe: DataFrame,
     output_folder: str,
     workflow_name: str,
-    key_columns: list[str],
-    field_mapping: Dict[str, str],
+    filename_suffixes: List[str] | None = None,
+    key_columns: List[str] | None = None,
+    field_mapping: Dict[str, str] | None = None,
 ) -> None:
     """
     HWP 양식문서 작성(채워넣기) 및 저장
@@ -120,15 +121,23 @@ def process_documents(
         dataframe (DataFrame): 데이터프레임 객체
         output_folder (str): 출력 폴더 이름
         workflow_name (str): 워크플로우 이름
-        key_columns: list[str]: 기본 열 이름들
+        filename_suffixes (List[str] | None): 저장할 파일 이름 접미사
+            - None인 경우, 기본적으로 인덱스 번호가 사용됨
+            - 예: ['001', '002', '003']
+        key_columns (List[str] | None): 기본 열 이름들
             - 문서 저장 시 파일 이름에 사용
             - 중복 방지 및 구분을 위해 사용됨
             - 예: ['이름', '생년월일']
-        field_mapping (Dict[str, str]): 필드 매핑 정보
+        field_mapping (Dict[str, str] | None): 필드 매핑 정보
+            - None인 경우, 데이터프레임의 열 이름을 그대로 사용하여 매핑됨
+            - 예: {'이름': '이름', '생년월일': '생년월일'}
 
     Returns:
         None
     """
+
+    if field_mapping is None:
+        field_mapping = {col: col for col in dataframe.columns}
 
     with hwp_context(visible=False) as hwp:
         # 템플릿 열기
@@ -136,10 +145,17 @@ def process_documents(
 
         # 문서 생성 및 저장
         for index, row in dataframe.iterrows():
-            print(f"문서 만드는중... ({int(str(index)) + 1}/{len(dataframe)})")
+            idx = int(str(index)) + 1
+            print(f"문서 만드는중... ({idx}/{len(dataframe)})")
 
             write_fields(hwp, row, field_mapping)
 
-            name_combined = "_".join(str(row[col]) for col in key_columns)
-            save_filename = f"{workflow_name}_{name_combined}"
+            if filename_suffixes is not None:
+                save_filename = f"{workflow_name}_{filename_suffixes[idx - 1]}"
+            elif key_columns is not None:
+                name_combined = "_".join(str(row[col]) for col in key_columns)
+                save_filename = f"{workflow_name}_{name_combined}"
+            else:
+                save_filename = f"{workflow_name}_{idx}"
+
             save_document(hwp, output_folder, save_filename)
