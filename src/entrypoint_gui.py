@@ -15,6 +15,12 @@ try:
 except ImportError:
     pass
 
+# UserWarning: Data Validation extension is not supported 해결
+# 경고 억제 코드 추가
+import warnings
+
+warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
+
 
 def main():
     st.set_page_config(page_title="AutoHWP", layout="wide")
@@ -40,13 +46,15 @@ def main():
     )
 
     st.title("양식문서 자동완성")
+    if "workflow_name" not in st.session_state:
+        st.session_state["workflow_name"] = "default_workflow"
 
     # 워크플로우 이름
     workflow_name = st.text_input(
         "워크플로우 이름",
         # value=st.session_state.get("workflow_name", ""),
         placeholder="예: 20XX_양식문서",
-        on_change=lambda: st.session_state.update({"workflow_name": workflow_name}),
+        on_change=lambda: st.session_state.update({"workflow_name": st.session_state.get("workflow_name", "")}),
         max_chars=50,
         help="워크플로우 이름은 생성된 파일명의 접두사로 사용됩니다. (예: 20XX_양식문서_홍길동.hwp)",
     )
@@ -91,7 +99,8 @@ def main():
                 st.rerun()
 
         # HWP 양식 파일 업로드
-        st.session_state["hwp_file_key"] = 0
+        if "hwp_file_key" not in st.session_state:
+            st.session_state["hwp_file_key"] = 0
         uploaded_file_hwp = st.file_uploader(
             "HWP",
             type=["hwp"],
@@ -121,7 +130,8 @@ def main():
                 st.rerun()
 
         # Excel 파일 업로드
-        st.session_state["excel_file_key"] = 0
+        if "excel_file_key" not in st.session_state:
+            st.session_state["excel_file_key"] = 0
         uploaded_file_excel = st.file_uploader(
             "Excel",
             type=["xlsx"],
@@ -456,6 +466,14 @@ def main():
             selected_columns = setting["columns"]
             fixed_value = setting["fixed_value"]
 
+            # KeyError: "['사용자 지정'] not in index" 해결
+            # 선택된 열이 데이터프레임에 존재하는지 확인하는 검증 로직 추가
+            if "converted_df" in st.session_state:
+                selected_columns = [col for col in st.session_state["converted_df"].columns if col in converted_df.columns]
+                if not selected_columns:
+                    st.error("선택한 열이 데이터프레임에 존재하지 않습니다.")
+                    return
+
             if len(selected_columns) == 0:
                 st.warning(f"❗ 필드 `{field}`에 대해 선택된 컬럼이 없습니다. 필드를 선택하세요.")
                 continue
@@ -480,10 +498,16 @@ def main():
                 elif "조사(은/는)" in selected_columns and len(selected_columns) == 2:
                     # "조사(은/는)"이 포함된 경우 (2개 선택: df 컬럼 값 + 조사(은/는))
                     selected_columns.remove("조사(은/는)")
-                    field_df[field] = converted_df[selected_columns].apply(
-                        lambda row: Josa.get_full_string(row.values.astype(str)[0], fixed_value),
-                        axis=1,
-                    )
+                    try:
+                        fixed_value = st.text_input("사용자 지정", value="", label_visibility="collapsed")
+                        if not fixed_value:
+                            raise ValueError("올바르지 않은 조사 값입니다.")
+                        field_df[field] = converted_df[selected_columns].apply(
+                            lambda row: Josa.get_full_string(row.values.astype(str)[0], fixed_value),
+                            axis=1,
+                        )
+                    except ValueError as e:
+                        st.error(str(e))
                 else:
                     # 실제 컬럼으로만 구성된 경우 (df 컬럼 값 + df 컬럼 값 + df 컬럼 값)
                     field_df[field] = converted_df[selected_columns].apply(
